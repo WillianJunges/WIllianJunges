@@ -1,0 +1,612 @@
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body {
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB, #1E90FF);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 1s ease;
+        }
+        
+        body.night {
+            background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+        }
+        
+        #game-container {
+            position: relative;
+            width: 400px;
+            height: 600px;
+            background-color: #87CEEB;
+            overflow: hidden;
+            border: 4px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        #bird {
+            position: absolute;
+            width: 40px;
+            height: 30px;
+            background-color: #FFD700;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            z-index: 10;
+            left: 50px;
+            top: 300px;
+            transition: transform 0.1s ease;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30"><path d="M20,5 Q25,15 20,25 Q15,15 20,5" fill="%23FFC000"/></svg>');
+            background-repeat: no-repeat;
+            background-position: center;
+            animation: flap 0.5s infinite;
+        }
+        
+        @keyframes flap {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+        
+        .pipe {
+            position: absolute;
+            width: 60px;
+            background-color: #2E8B57;
+            border: 3px solid #228B22;
+            border-radius: 5px;
+        }
+        
+        #ground {
+            position: absolute;
+            width: 100%;
+            height: 60px;
+            background-color: #8B4513;
+            bottom: 0;
+            z-index: 10;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><rect width="10" height="10" fill="%23A0522D"/><rect x="10" y="10" width="10" height="10" fill="%23A0522D"/></svg>');
+        }
+        
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 24px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+        }
+        
+        #high-score {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 18px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+        }
+        
+        #coins {
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            font-size: 18px;
+            color: gold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+        }
+        
+        .customization-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+            width: 80%;
+        }
+        
+        .customization-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .shop-item {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .shop-button {
+            background-color: #FFD700;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            color: white;
+        }
+        
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            color: white;
+        }
+        
+        button {
+            background-color: #FFD700;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FFC000;
+            transform: scale(1.05);
+        }
+        
+        .cloud {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="score">0</div>
+        <div id="high-score">High: 0</div>
+        <div id="coins">Coins: 0</div>
+        <div id="bird"></div>
+        <div id="ground"></div>
+        
+        <div id="start-screen">
+            <h1 class="text-3xl mb-4">FLAPPY BIRD</h1>
+            <p class="mb-8 text-center px-4">Press SPACE or click to make the bird fly</p>
+            
+            <div class="customization-options">
+                <h3>Customize Bird:</h3>
+                <div class="customization-option">
+                    <span>Color:</span>
+                    <select id="bird-color">
+                        <option value="#FFD700">Yellow</option>
+                        <option value="#FF0000">Red</option>
+                        <option value="#00FF00">Green</option>
+                        <option value="#0000FF">Blue</option>
+                    </select>
+                </div>
+                
+                <h3>Customize Pipes:</h3>
+                <div class="customization-option">
+                    <span>Color:</span>
+                    <select id="pipe-color">
+                        <option value="#2E8B57">Green</option>
+                        <option value="#FF0000">Red</option>
+                        <option value="#0000FF">Blue</option>
+                        <option value="#800080">Purple</option>
+                    </select>
+                </div>
+                
+                <h3>Shop:</h3>
+                <div class="shop-item">
+                    <span>Golden Bird (50 coins)</span>
+                    <button class="shop-button" id="buy-golden">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <span>Rainbow Pipes (100 coins)</span>
+                    <button class="shop-button" id="buy-rainbow">Buy</button>
+                </div>
+            </div>
+            
+            <button id="start-button">START GAME</button>
+        </div>
+        
+        <div id="game-over">
+            <h1 class="text-3xl mb-4">GAME OVER</h1>
+            <p id="final-score" class="mb-8">Score: 0</p>
+            <button id="restart-button">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <audio id="flap-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-bird-whistle-2460.mp3" preload="auto"></audio>
+    <audio id="score-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" preload="auto"></audio>
+    <audio id="gameover-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-falling-game-over-1942.mp3" preload="auto"></audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            feather.replace();
+            
+            // Audio elements
+            const flapSound = document.getElementById('flap-sound');
+            const scoreSound = document.getElementById('score-sound');
+            const gameoverSound = document.getElementById('gameover-sound');
+            
+            const gameContainer = document.getElementById('game-container');
+            const bird = document.getElementById('bird');
+            const scoreElement = document.getElementById('score');
+            const gameOverScreen = document.getElementById('game-over');
+            const startScreen = document.getElementById('start-screen');
+            const startButton = document.getElementById('start-button');
+            const restartButton = document.getElementById('restart-button');
+            const finalScoreElement = document.getElementById('final-score');
+            
+            let gameRunning = false;
+            let score = 0;
+            let gravity = 0.5;
+            let birdVelocity = 0;
+            let birdPosition = 300;
+            let pipeGap = 150;
+            let pipeSpeed = 2; // Base pipe speed
+            let pipes = [];
+            let clouds = [];
+            let gameLoopId;
+            let pipeInterval;
+            let cloudInterval;
+            let highScore = localStorage.getItem('flappyHighScore') || 0;
+            let coins = localStorage.getItem('flappyCoins') || 0;
+            let nightMode = false;
+            let birdColor = '#FFD700';
+            let pipeColor = '#2E8B57';
+            let goldenBirdUnlocked = localStorage.getItem('goldenBird') === 'true';
+            let rainbowPipesUnlocked = localStorage.getItem('rainbowPipes') === 'true';
+            
+            // Create clouds
+            function createClouds() {
+                for (let i = 0; i < 5; i++) {
+                    createCloud();
+                }
+            }
+            
+            function createCloud() {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                
+                const size = Math.random() * 50 + 50;
+                const left = Math.random() * gameContainer.offsetWidth;
+                const top = Math.random() * 200;
+                
+                cloud.style.width = `${size}px`;
+                cloud.style.height = `${size / 2}px`;
+                cloud.style.left = `${left}px`;
+                cloud.style.top = `${top}px`;
+                
+                gameContainer.appendChild(cloud);
+                clouds.push({
+                    element: cloud,
+                    left: left,
+                    speed: Math.random() * 0.5 + 0.2
+                });
+            }
+            
+            // Move clouds
+            function moveClouds() {
+                clouds.forEach((cloud, index) => {
+                    cloud.left -= cloud.speed;
+                    cloud.element.style.left = `${cloud.left}px`;
+                    
+                    // Remove clouds that are off screen
+                    if (cloud.left < -cloud.element.offsetWidth) {
+                        cloud.element.parentNode.removeChild(cloud.element);
+                        clouds.splice(index, 1);
+                    }
+                });
+            }
+            
+            // Start game
+            function startGame() {
+                startScreen.style.display = 'none';
+                document.getElementById('high-score').textContent = `High: ${highScore}`;
+                document.getElementById('coins').textContent = `Coins: ${coins}`;
+                gameRunning = true;
+                score = 0;
+                scoreElement.textContent = score;
+                
+                // Apply customizations
+                birdColor = document.getElementById('bird-color').value;
+                pipeColor = document.getElementById('pipe-color').value;
+                bird.style.backgroundColor = birdColor;
+                document.getElementById('high-score').textContent = `High: ${highScore}`;
+                birdPosition = 300;
+                birdVelocity = 0;
+                bird.style.top = `${birdPosition}px`;
+                
+                // Clear existing pipes
+                pipes.forEach(pipe => {
+                    if (pipe.element.parentNode) {
+                        pipe.element.parentNode.removeChild(pipe.element);
+                    }
+                    if (pipe.topElement.parentNode) {
+                        pipe.topElement.parentNode.removeChild(pipe.topElement);
+                    }
+                });
+                pipes = [];
+                
+                // Start game loop
+                gameLoopId = requestAnimationFrame(gameLoop);
+                
+                // Generate pipes
+                pipeInterval = setInterval(generatePipe, 2000);
+                
+                // Generate clouds
+                createClouds();
+                cloudInterval = setInterval(createCloud, 5000);
+            }
+            
+            // Game over
+            function gameOver() {
+                gameRunning = false;
+                cancelAnimationFrame(gameLoopId);
+                clearInterval(pipeInterval);
+                clearInterval(cloudInterval);
+                
+                gameoverSound.currentTime = 0;
+                gameoverSound.play();
+                
+                finalScoreElement.textContent = `Score: ${score}`;
+                gameOverScreen.style.display = 'flex';
+                
+                // Reset difficulty
+                pipeSpeed = 2;
+                nightMode = false;
+                document.body.classList.remove('night');
+            }
+            
+            // Generate pipes
+            function generatePipe() {
+                const pipeHeight = Math.floor(Math.random() * 250) + 50;
+                const pipeTop = document.createElement('div');
+                const pipeBottom = document.createElement('div');
+                
+                pipeTop.className = 'pipe';
+                pipeBottom.className = 'pipe';
+                
+                pipeTop.style.height = `${pipeHeight}px`;
+                pipeTop.style.top = '0';
+                pipeTop.style.left = `${gameContainer.offsetWidth}px`;
+                
+                pipeBottom.style.height = `${gameContainer.offsetHeight - pipeHeight - pipeGap - 60}px`;
+                pipeBottom.style.top = `${pipeHeight + pipeGap}px`;
+                pipeBottom.style.left = `${gameContainer.offsetWidth}px`;
+                
+                gameContainer.appendChild(pipeTop);
+                gameContainer.appendChild(pipeBottom);
+                
+                pipes.push({
+                    element: pipeBottom,
+                    topElement: pipeTop,
+                    left: gameContainer.offsetWidth,
+                    passed: false
+                });
+            }
+            
+            // Move pipes
+            function movePipes() {
+                pipes.forEach(pipe => {
+                    pipe.left -= pipeSpeed;
+                    pipe.element.style.left = `${pipe.left}px`;
+                    pipe.topElement.style.left = `${pipe.left}px`;
+                    
+                    // Check if bird passed the pipe
+                    if (!pipe.passed && pipe.left < 50 - 60) {
+                        pipe.passed = true;
+                        score++;
+                        coins++;
+                        scoreElement.textContent = score;
+                        document.getElementById('coins').textContent = `Coins: ${coins}`;
+                        localStorage.setItem('flappyCoins', coins);
+                        scoreSound.currentTime = 0;
+                        scoreSound.play();
+                        
+                        // Increase difficulty every 5 points
+                        if (score % 10 === 0) {
+                            pipeSpeed += 0.5;
+                        }
+                        
+                        // Toggle night mode after 20 points
+                        if (score === 2) {
+                            nightMode = !nightMode;
+                            document.body.classList.toggle('night', nightMode);
+                        }
+                        
+                        if (score > highScore) {
+                            highScore = score;
+                            document.getElementById('high-score').textContent = `High: ${highScore}`;
+                            localStorage.setItem('flappyHighScore', highScore);
+                        }
+                    }
+                    
+                    // Remove pipes that are off screen
+                    if (pipe.left < -60) {
+                        pipe.element.parentNode.removeChild(pipe.element);
+                        pipe.topElement.parentNode.removeChild(pipe.topElement);
+                        pipes.splice(pipes.indexOf(pipe), 1);
+                    }
+                });
+            }
+            
+            // Check collisions
+            function checkCollisions() {
+                // Check ground collision
+                if (birdPosition > gameContainer.offsetHeight - 60 - 30) {
+                    gameOver();
+                    return;
+                }
+                
+                // Check ceiling collision
+                if (birdPosition < 0) {
+                    gameOver();
+                    return;
+                }
+                
+                // Check pipe collisions using bounding boxes
+                const birdRect = bird.getBoundingClientRect();
+                
+                for (const pipe of pipes) {
+                    const topPipeRect = pipe.topElement.getBoundingClientRect();
+                    const bottomPipeRect = pipe.element.getBoundingClientRect();
+                    
+                    // Check top pipe collision
+                    if (isColliding(birdRect, topPipeRect)) {
+                        gameOver();
+                        return;
+                    }
+                    
+                    // Check bottom pipe collision
+                    if (isColliding(birdRect, bottomPipeRect)) {
+                        gameOver();
+                        return;
+                    }
+                }
+            }
+            
+            function isColliding(rect1, rect2) {
+                return !(
+                    rect1.right < rect2.left || 
+                    rect1.left > rect2.right || 
+                    rect1.bottom < rect2.top || 
+                    rect1.top > rect2.bottom
+                );
+            }
+            
+            // Game loop
+            function gameLoop() {
+                if (!gameRunning) return;
+                
+                // Apply gravity
+                birdVelocity += gravity;
+                birdPosition += birdVelocity;
+                bird.style.top = `${birdPosition}px`;
+                
+                // Rotate bird based on velocity
+                bird.style.transform = `rotate(${birdVelocity * 5}deg)`;
+                
+                movePipes();
+                moveClouds();    
+                checkCollisions();
+                
+                gameLoopId = requestAnimationFrame(gameLoop);
+            }
+            
+            // Jump function
+            function jump() {
+                if (!gameRunning) return;
+                birdVelocity = -10;
+                flapSound.currentTime = 0;
+                flapSound.play();
+            }
+            
+            // Event listeners
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    jump();
+                }
+            });
+            
+            gameContainer.addEventListener('click', () => {
+                jump();
+            });
+            
+            // Mobile touch support
+            gameContainer.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                jump();
+            });
+            
+            // Helper function to darken color
+            function darkenColor(color, percent) {
+                const num = parseInt(color.replace('#', ''), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = (num >> 16) - amt;
+                const G = (num >> 8 & 0x00FF) - amt;
+                const B = (num & 0x0000FF) - amt;
+                return `#${(
+                    0x1000000 +
+                    (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+                    (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+                    (B < 255 ? (B < 1 ? 0 : B) : 255)
+                ).toString(16).slice(1)}`;
+            }
+
+            startButton.addEventListener('click', startGame);
+            
+            // Shop functionality
+            document.getElementById('buy-golden').addEventListener('click', () => {
+                if (coins >= 50) {
+                    coins -= 50;
+                    localStorage.setItem('flappyCoins', coins);
+                    goldenBirdUnlocked = true;
+                    localStorage.setItem('goldenBird', 'true');
+                    document.getElementById('coins').textContent = `Coins: ${coins}`;
+                    alert('Golden Bird unlocked! Select it from bird colors.');
+                } else {
+                    alert('Not enough coins!');
+                }
+            });
+            
+            document.getElementById('buy-rainbow').addEventListener('click', () => {
+                if (coins >= 100) {
+                    coins -= 100;
+                    localStorage.setItem('flappyCoins', coins);
+                    rainbowPipesUnlocked = true;
+                    localStorage.setItem('rainbowPipes', 'true');
+                    document.getElementById('coins').textContent = `Coins: ${coins}`;
+                    alert('Rainbow Pipes unlocked!');
+                } else {
+                    alert('Not enough coins!');
+                }
+            });
+            
+            // Load saved coins
+            document.getElementById('coins').textContent = `Coins: ${coins}`;
+            restartButton.addEventListener('click', () => {
+                gameOverScreen.style.display = 'none';
+                startGame();
+            });
+        });
+    </script>
+</body>
+</html>
